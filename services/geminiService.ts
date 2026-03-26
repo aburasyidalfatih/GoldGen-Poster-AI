@@ -1,0 +1,266 @@
+import { GoogleGenAI, Type } from "@google/genai";
+import { PosterConcept } from "../types";
+
+// Initialize Gemini Client
+// const apiKey = process.env.API_KEY || "";
+// const ai = new GoogleGenAI({ apiKey: apiKey });
+
+// --- GEOLOGY & PROSPECTING ENGINE ---
+// Topik diubah khusus untuk Geologi, Pencarian Emas Alam, dan Identifikasi Batuan
+const themes = [
+  "Reading the River: Inside Bends & Drop Zones",
+  "Bedrock Cracks: The Natural Gold Trap",
+  "Quartz Identification: Rusty vs. Bull Quartz",
+  "Iron Staining: The Red Flag of Gold",
+  "Black Sand: The Heavy Indicator",
+  "Pyrite vs. Gold: The Shatter Test",
+  "Ancient Channels: High Bench Deposits",
+  "Placer vs. Lode: Tracking the Source",
+  "Garnets & Gold: The Ruby Companions",
+  "Clay Layers: False Bedrock Secrets",
+  "Sulfides: The Invisible Gold Host",
+  "Gossan Caps: The Rusty Hat of a Gold Vein",
+  "Contact Zones: Where Geology Changes",
+  "Fault Lines: Nature's Gold Plumbing",
+  "Skarn Deposits: Gold in Limestone",
+  "Porphyry Systems: Low Grade, Huge Tonnage",
+  "Epithermal Veins: Boiling Zone Bonanzas",
+  "Greenstone Belts: Ancient Volcanic Gold",
+  "Slate Belts: The Nugget Factories",
+  "Glacial Gold: Moraines & Flour Gold",
+  "Desert Prospecting: Dry Washing Tactics",
+  "Beach Placers: Wave Action Gold",
+  "Eluvial Deposits: Gold That Hasn't Moved",
+  "Residual Deposits: Weathered in Place",
+  "Specific Gravity: Why Gold Sinks",
+  "The Streak Test: Gold vs. Chalcopyrite",
+  "Arsenopyrite: The Garlic-Smelling Indicator",
+  "Galena: Silver-Lead & Gold Friends",
+  "Magnetite vs. Hematite: Know Your Irons",
+  "Serpentine Rock: The Green Host",
+  "Calcite vs. Quartz: The Acid Test",
+  "Boxwork Texture: Where Sulfides Used to Be",
+  "Boiling Zones: Textures of Epithermal Gold",
+  "Nugget Patches: Detecting Shallow Ground",
+  "Paystreaks: Reading the Path of Least Resistance",
+  "Flood Gold: Skim Bars & Moss Mats",
+  "Crevicing: Snipping Gold from Cracks",
+  "Booming: Ancient Water Methods",
+  "Mercury in Gold: The Amalgam Danger",
+  "Tellurides: The Silver-Gold Mix",
+  "Carlin-Type Gold: Invisible & Disseminated",
+  "Orogenic Gold: Mountain Building Riches",
+  "VMS Deposits: Volcanic Massive Sulfides",
+  "Witwatersrand: The Pebble Conglomerates",
+  "Breccia Pipes: Exploded Rock Gold",
+  "Shear Zones: Crushed Rock Pathways",
+  "Fold Hinges: Structural Traps",
+  "Saddle Reefs: Gold at the Top of the Fold",
+  "Stockworks: Networks of Tiny Veins",
+  "Laterite Gold: Tropical Weathering"
+];
+
+// Gaya visual diubah menjadi "Field Guide", "Geological Diagram", dan "Textured"
+const visualStyles = [
+  "Vintage Field Guide: Aged parchment paper texture, hand-drawn scientific illustrations mixed with realistic rock textures, typography looks like an old manual.",
+  "National Geographic Cross-Section: Clean, highly realistic 3D cutaway of riverbeds or mountains, educational labels, bright daylight lighting.",
+  "Dark Rock Macro: Dark slate/granite background, extreme close-up of gold veins, high contrast white/yellow text, gritty texture.",
+  "Survivor Manual: Rough wood or dirt background, rugged aesthetic, tools like pickaxes and pans arranged as borders, bold grunge typography.",
+  "Detailed Diagrammatic: Split screens showing 'Good Rock' vs 'Bad Rock', clear checkmarks and cross icons, hyper-realistic mineral rendering."
+];
+
+// Struktur layout khusus edukasi/instruksi
+const layoutStructures = [
+  "CROSS-SECTION CUTAWAY: A side-view of a riverbed showing the water, gravel layers, and GOLD nuggets trapped deep in bedrock cracks.",
+  "VISUAL CHECKLIST (SPLIT SCREEN): Left side showing a 'Barren Rock' (Smooth white quartz), Right side showing 'Gold Bearing Rock' (Rusty, fractured, sulfides).",
+  "STEP-BY-STEP PROCESS: Vertical flow showing 1. The Mountain Source -> 2. Erosion -> 3. River Transport -> 4. Settlement in Crevices.",
+  "FIELD SIGNS GRID: A 2x2 grid showing close-ups of specific indicators: Black Sand, Iron Rust, Fractured Quartz, and Pyrite Cubes.",
+  "THE GOLDEN PATH: A winding river illustration viewed from above, with arrows pointing to the 'Inside Bends' and 'Behind Boulders' where gold drops.",
+  "THE MAGNIFYING GLASS: A macro view of a specific rock texture or mineral grain, highlighting tiny gold inclusions invisible to the naked eye.",
+  "BEFORE & AFTER: A landscape split view showing a river channel 'Before Flood' (Normal) and 'After Flood' (New deposit zones marked).",
+  "THE GEOLOGIST'S NOTEBOOK: A sketch-style layout with handwritten notes, arrows, and circled areas pointing to key geological features on a rock face.",
+  "3D BLOCK DIAGRAM: An isometric view of a mountain or river section to show depth, layers, and how gold veins travel underground.",
+  "THE PROSPECTOR'S MAP: A top-down map view with 'X' marks, trails, and contour lines showing where to sample in a valley."
+];
+
+/**
+ * Helper to get history from localStorage
+ */
+const getPreviousTopics = (): string => {
+  if (typeof window === 'undefined') return "";
+  try {
+    const history = localStorage.getItem('goldgen_history');
+    if (!history) return "";
+    const parsed = JSON.parse(history);
+    // Extract last 10 titles to avoid token overflow
+    const titles = parsed.map((item: any) => item.title).slice(0, 10).join(", ");
+    return titles;
+  } catch (e) {
+    return "";
+  }
+};
+
+/**
+ * Generates a creative concept for a Gold Prospecting/Geology poster.
+ */
+export const generatePosterConcept = async (): Promise<PosterConcept> => {
+  const apiKey = process.env.API_KEY || "";
+  if (!apiKey) {
+    throw new Error("System Error: API Key is missing from environment variables.");
+  }
+  const ai = new GoogleGenAI({ apiKey: apiKey });
+
+  // --- SEQUENTIAL TOPIC ROTATION LOGIC ---
+  // Get the last used index from localStorage (default to -1 so first run is 0)
+  let nextIndex = 0;
+  if (typeof window !== 'undefined') {
+    const storedIndex = localStorage.getItem('goldgen_topic_index');
+    if (storedIndex !== null) {
+      nextIndex = (parseInt(storedIndex, 10) + 1) % themes.length;
+    }
+    // Save the new index for next time
+    localStorage.setItem('goldgen_topic_index', nextIndex.toString());
+  }
+
+  const randomTheme = themes[nextIndex];
+  // ---------------------------------------
+
+  const randomStyle = visualStyles[Math.floor(Math.random() * visualStyles.length)];
+  const randomLayout = layoutStructures[Math.floor(Math.random() * layoutStructures.length)];
+  
+  // Get history to prevent duplicates (still useful for context, though rotation solves the main issue)
+  const previouslyGenerated = getPreviousTopics();
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Create a concept for a REALISTIC GEOLOGICAL PROSPECTING INFOGRAPHIC.
+      
+      PARAMETERS:
+      - Core Topic Suggestions: "${randomTheme}" (You can vary this)
+      - Visual Style: "${randomStyle}"
+      - Layout Structure: "${randomLayout}"
+      
+      HISTORY EXCLUSION LIST (DO NOT REPEAT THESE EXACT TITLES):
+      [${previouslyGenerated}]
+      
+      Target Audience: Gold Prospectors, Geologists, Treasure Hunters.
+      Language: ENGLISH ONLY.
+      
+      Requirements:
+      1. Title: Short, punchy, educational (e.g., "IS THIS ROCK RICH?", "READ THE RIVER").
+      2. Tagline: A practical rule of thumb (e.g., "Follow the black sand to find the gold.").
+      3. Data Points: 4-5 Practical, actionable field tips. NOT abstract financial advice. REAL GEOLOGY.
+      4. Visual Prompt: Describe a SCENE with rocks, water, dirt, tools (pickaxe, pan). MUST BE REALISTIC.
+      5. Social Caption: WRITE A SHORT EDUCATIONAL CAPTION (Max 500 characters). 
+         - Structure: 
+           (a) Hook Question.
+           (b) THE SCIENCE: Brief explanation.
+           (c) FIELD TIP: Actionable advice.
+           (d) DISCUSSION QUESTION: Ask the audience about their experience to provoke comments (e.g., "Have you seen this?", "What's your biggest find?").
+           (e) Hashtags.
+      `,
+      config: {
+        systemInstruction: "You are an Expert Geologist. Create educational field guides. Keep captions concise (under 500 chars). ALWAYS end with a question to the audience.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING, description: "Bold Poster Title" },
+            tagline: { type: Type.STRING, description: "Educational Subtitle" },
+            description: { type: Type.STRING, description: "Brief concept rationale" },
+            visualPrompt: { type: Type.STRING, description: "Detailed prompt for generating the infographic image." },
+            colorPalette: { 
+              type: Type.ARRAY, 
+              items: { type: Type.STRING },
+              description: "Earthy colors (Browns, Greys, Greens, Gold)" 
+            },
+            infographicTitle: { type: Type.STRING, description: "Header for the tips section" },
+            infographicPoints: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "4-5 short geological tips."
+            },
+            socialCaption: {
+              type: Type.STRING,
+              description: "Short educational caption (Max 500 characters)."
+            }
+          },
+          required: ["title", "tagline", "description", "visualPrompt", "colorPalette", "infographicTitle", "infographicPoints", "socialCaption"]
+        }
+      }
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text) as PosterConcept;
+    }
+    throw new Error("Gemini API returned no text.");
+  } catch (error: any) {
+    console.error("Error generating concept:", error);
+    throw error;
+  }
+};
+
+/**
+ * Generates the actual poster image.
+ */
+export const generatePosterImage = async (concept: PosterConcept): Promise<string> => {
+  const apiKey = process.env.API_KEY || "";
+  if (!apiKey) {
+    throw new Error("System Error: API Key is missing.");
+  }
+  const ai = new GoogleGenAI({ apiKey: apiKey });
+
+  try {
+    const prompt = `
+      Create a VERTICAL EDUCATIONAL INFOGRAPHIC POSTER about GOLD PROSPECTING.
+      
+      TEXT CONTENT TO INCLUDE (Must be legible):
+      HEADLINE: "${concept.title}"
+      SUBTITLE: "${concept.tagline}"
+      LIST HEADER: "${concept.infographicTitle}"
+      LIST POINTS:
+      ${concept.infographicPoints.map((p) => `- ${p}`).join('\n')}
+      
+      VISUAL STYLE & COMPOSITION:
+      ${concept.visualPrompt}
+      
+      MANDATORY ART DIRECTION:
+      - STYLE: Realistic Illustration / Field Guide / National Geographic Diagram.
+      - TEXTURE: Detailed Rock textures, flowing water, dirt, rust, metallic gold.
+      - ATMOSPHERE: Educational, scientific, rugged, outdoors.
+      - LAYOUT: Use distinct sections, arrows, or split screens to organize information.
+      - NO ABSTRACT ART. NO CARTOONS. It must look like a professional reference guide.
+      - Color Grading: Earth tones, Slate Grey, River Blue, Rusty Orange, Bright Gold.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-pro-image-preview", 
+      contents: {
+        parts: [
+          { text: prompt }
+        ]
+      },
+      config: {
+        imageConfig: {
+            aspectRatio: "9:16",
+            imageSize: "1K" 
+        }
+      }
+    });
+
+    const parts = response.candidates?.[0]?.content?.parts;
+    if (parts) {
+      for (const part of parts) {
+        if (part.inlineData && part.inlineData.data) {
+           return `data:image/png;base64,${part.inlineData.data}`;
+        }
+      }
+    }
+    
+    throw new Error("No image data found in response.");
+  } catch (error: any) {
+    console.error("Error generating image:", error);
+    throw error;
+  }
+};

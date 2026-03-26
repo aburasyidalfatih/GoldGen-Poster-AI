@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#D4A523" />
+    <title>GoldGen Poster AI</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2534/2534204.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              gold: {
+                100: '#F9F1D8',
+                200: '#F0DEAA',
+                300: '#E6CB7D',
+                400: '#DDB850',
+                500: '#D4A523', // Primary Gold
+                600: '#AA841C',
+                700: '#806315',
+                800: '#55420E',
+                900: '#2B2107',
+              },
+              onyx: {
+                900: '#0a0a0a',
+                800: '#141414',
+                700: '#202020',
+              }
+            },
+            fontFamily: {
+              serif: ['Playfair Display', 'serif'],
+              sans: ['Inter', 'sans-serif'],
+            },
+            backgroundImage: {
+              'classic-vignette': 'radial-gradient(circle, rgba(40,40,40,1) 0%, rgba(10,10,10,1) 100%)',
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-onyx-900 bg-classic-vignette text-slate-200 font-serif antialiased selection:bg-gold-700 selection:text-white min-h-screen">
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(registration => {
+              console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

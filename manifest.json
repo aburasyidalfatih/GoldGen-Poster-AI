@@ -1,0 +1,21 @@
+{
+  "short_name": "GoldGen",
+  "name": "GoldGen Professional AI",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#D4A523",
+  "background_color": "#020617",
+  "orientation": "portrait"
+}
