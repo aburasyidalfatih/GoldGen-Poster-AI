@@ -46,15 +46,21 @@ function App() {
     };
   }, [refreshApiKeyStatus]);
 
-  const handleInstallClick = () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    installPrompt.userChoice.then((choiceResult: any) => {
-      if (choiceResult.outcome === 'accepted') {
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      alert("Aplikasi dapat diinstal langsung melalui menu browser (klik ikon Install di ujung kanan address bar atau menu Titik Tiga > 'Install GoldGen').");
+      return;
+    }
+    try {
+      await installPrompt.prompt();
+      const choiceResult = await installPrompt.userChoice;
+      if (choiceResult?.outcome === 'accepted') {
         setShowInstallBtn(false);
       }
       setInstallPrompt(null);
-    });
+    } catch (err) {
+      console.warn("PWA install error:", err);
+    }
   };
 
   const sendNotification = (title: string, body: string) => {
