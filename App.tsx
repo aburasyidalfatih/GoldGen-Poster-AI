@@ -48,7 +48,7 @@ function App() {
 
   const handleInstallClick = async () => {
     if (!installPrompt) {
-      alert("Aplikasi dapat diinstal langsung melalui menu browser (klik ikon Install di ujung kanan address bar atau menu Titik Tiga > 'Install GoldGen').");
+      alert("Aplikasi dapat diinstal langsung melalui menu browser (klik ikon Install di ujung kanan address bar atau menu Titik Tiga > 'Install Erna Gold').");
       return;
     }
     try {
@@ -68,7 +68,7 @@ function App() {
       try {
         new Notification(title, {
           body,
-          icon: 'https://cdn-icons-png.flaticon.com/512/2534/2534204.png'
+          icon: '/icon-192.png'
         });
       } catch (e) {
         console.log('Notification error', e);
@@ -141,7 +141,7 @@ function App() {
       setAppState(AppState.FINISHED);
       
       // Trigger Notification
-      sendNotification("GoldGen Poster Ready!", "Your professional infographic has been successfully generated.");
+      sendNotification("Erna Gold Poster Ready!", "Your professional infographic has been successfully generated.");
       
     } catch (err: any) {
       console.error(err);
@@ -235,7 +235,7 @@ function App() {
       <div className="text-center max-w-2xl mx-auto mb-12 relative">
         <div className="w-24 h-1 bg-gold-600 mx-auto mb-6"></div>
         <h1 className="text-5xl md:text-7xl font-serif font-normal text-gold-100 mb-4 tracking-tight drop-shadow-lg">
-          Gold<span className="text-gold-500 italic">Gen</span>
+          Erna<span className="text-gold-500 italic">Gold</span>
         </h1>
         <p className="text-gold-400/80 font-serif text-lg tracking-widest uppercase text-xs border-y border-gold-900 py-2 inline-block px-8">
           The Professional Infographic Atelier
@@ -378,7 +378,7 @@ function App() {
                   onClick={() => {
                     const link = document.createElement('a');
                     link.href = imageUrl;
-                    link.download = `goldgen-classic-${Date.now()}.png`;
+                    link.download = `erna-gold-${Date.now()}.png`;
                     link.click();
                   }}
                   variant="primary"
