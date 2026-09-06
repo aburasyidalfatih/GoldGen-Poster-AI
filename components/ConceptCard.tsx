@@ -135,7 +135,7 @@ const ConceptCard: React.FC<ConceptCardProps> = ({
                       )}
                     </button>
                   </div>
-                  <p className="text-slate-300 text-xs font-mono leading-relaxed opacity-80 flex-1 select-all">
+                  <p className="text-slate-300 text-xs font-mono leading-relaxed opacity-80 flex-1 select-all whitespace-pre-wrap">
                     {concept.socialCaption}
                   </p>
                </div>

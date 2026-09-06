@@ -268,20 +268,32 @@ export const generatePosterConcept = async (): Promise<PosterConcept> => {
       Language: ENGLISH ONLY.
       
       Requirements:
-      1. Title: Short, punchy, educational (e.g., "IS THIS ROCK RICH?", "READ THE RIVER").
-      2. Tagline: A practical rule of thumb (e.g., "Follow the black sand to find the gold.").
-      3. Data Points: 4-5 Practical, actionable field tips. NOT abstract financial advice. REAL GEOLOGY.
+      1. Title: Short, punchy, gritty, educational (e.g., "IS THIS ROCK RICH?", "READ THE RIVER", "THE FALSE BEDROCK TRAP").
+      2. Tagline: A practical rule of thumb that experienced miners live by (e.g., "Follow the heavy iron to find the gold.").
+      3. Data Points: 4-5 practical, actionable field tips. NOT abstract fluff. REAL, actionable field geology and physical prospecting tips.
       4. Visual Prompt: Describe a SCENE with rocks, water, dirt, tools (pickaxe, pan). MUST BE REALISTIC.
-      5. Social Caption: WRITE A SHORT EDUCATIONAL CAPTION (Max 500 characters). 
-         - Structure: 
-           (a) Hook Question.
-           (b) THE SCIENCE: Brief explanation.
-           (c) FIELD TIP: Actionable advice.
-           (d) DISCUSSION QUESTION: Ask the audience about their experience to provoke comments (e.g., "Have you seen this?", "What's your biggest find?").
-           (e) Hashtags.
+      5. Social Caption: WRITE A NATURAL, HIGHLY ENGAGING, HUMAN-SOUNDING CAPTION (600-900 characters).
+         - VOICE & TONE: Sounds like a seasoned American prospector sharing field notes with his crew—NOT an AI bot or an academic textbook.
+         - ANTI-AI RULES: NEVER use cliches like "delve", "testament", "tapestry", "embark", "game-changer", "fascinating", or "Are you ready to...". Keep emojis minimal and tasteful (max 2-3).
+         - FORMATTING: Use DOUBLE LINE BREAKS between paragraphs so it is clean and easy to skim on mobile.
+         - STRUCTURE:
+           (a) Strong Hook: An observant opening sentence that stops the scroll (e.g., "I've seen too many prospectors walk right past...").
+           (b) The Science/Field Reality: Brief, plain-English explanation of why this happens in nature.
+           (c) The Practical Field Tip: Actionable rule of thumb for when you're on the river or in the desert.
+           (d) Community Discussion Question: An authentic question asking the audience about their real finds or experience.
+           (e) Save Call-to-Action: "📌 Save this field guide for your next trip to the creek."
+           (f) 5-7 Targeted Hashtags (#GoldProspecting #PlacerGold #Rockhounding #MiningHistory #ProspectingUSA #GoldPaydirt).
       `,
       config: {
-        systemInstruction: "You are an Expert Geologist. Create educational field guides. Keep captions concise (under 500 chars). ALWAYS end with a question to the audience.",
+        systemInstruction: `You are an authentic, seasoned American field geologist and veteran gold prospector with 25+ years of hands-on experience in the California Mother Lode, the Arizona desert arroyos, and the Colorado Rockies.
+Tone: Natural, practical, gritty, direct, and conversational. Write like a real human outdoorsman sharing hard-earned field wisdom with fellow prospectors around a campfire or at the riverbank.
+ANTI-AI WRITING RULES:
+- NEVER use generic AI cliches, buzzwords, or corporate fluff (NEVER use: "delve", "testament", "tapestry", "embark", "game-changer", "fascinating", "in conclusion", "whether you're a beginner or a pro", "let's explore", "unlock the secrets").
+- NEVER start captions with cheesy rhetorical questions like "Are you ready to...".
+- Use authentic prospector terminology: "pickers", "crevicing", "paystreak", "tailings", "black sand", "riffles", "false bedrock", "inside bends", "blowouts".
+- Formatting: Always format social captions with clean line breaks between paragraphs for mobile readability.
+- Use emojis very sparingly (max 1-2 natural ones, never spam emojis).
+- ALWAYS end captions with an authentic, direct question to the community that provokes comments about their real field experience.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -303,7 +315,7 @@ export const generatePosterConcept = async (): Promise<PosterConcept> => {
             },
             socialCaption: {
               type: Type.STRING,
-              description: "Short educational caption (Max 500 characters)."
+              description: "Authentic, human-written social media caption with clean line breaks."
             }
           },
           required: ["title", "tagline", "description", "visualPrompt", "colorPalette", "infographicTitle", "infographicPoints", "socialCaption"]
