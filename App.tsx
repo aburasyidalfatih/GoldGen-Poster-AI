@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppState, PosterConcept } from './types';
 import * as GeminiService from './services/geminiService';
 import Button from './components/Button';
 import ConceptCard from './components/ConceptCard';
+import ApiKeyModal from './components/ApiKeyModal';
 
 function App() {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -11,24 +12,21 @@ function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   
-  // PWA & Notification State
+  // PWA, Notification & API Key State
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(false);
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [imagePrompt, setImagePrompt] = useState<string>('');
+
+  const refreshApiKeyStatus = useCallback(() => {
+    const key = GeminiService.getApiKey();
+    setHasApiKey(Boolean(key && key.trim()));
+  }, []);
 
   // Initialize PWA, Notifications, and API Key check
   useEffect(() => {
-    // 0. Check for API Key
-    const checkApiKey = async () => {
-      if (window.aistudio && window.aistudio.hasSelectedApiKey) {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        setHasApiKey(hasKey);
-      } else {
-        // If not in the specific environment, assume key is present via env vars
-        setHasApiKey(true);
-      }
-    };
-    checkApiKey();
+    refreshApiKeyStatus();
 
     // 1. Listen for install prompt
     const handleBeforeInstallPrompt = (e: any) => {
@@ -46,14 +44,7 @@ function App() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
-
-  const handleSelectKey = async () => {
-    if (window.aistudio && window.aistudio.openSelectKey) {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true);
-    }
-  };
+  }, [refreshApiKeyStatus]);
 
   const handleInstallClick = () => {
     if (!installPrompt) return;
@@ -80,6 +71,12 @@ function App() {
   };
 
   const handleGenerateConcept = async () => {
+    const currentKey = GeminiService.getApiKey();
+    if (!currentKey) {
+      setIsKeyModalOpen(true);
+      return;
+    }
+
     // Request permission explicitly if not granted yet
     if ('Notification' in window && Notification.permission === 'default') {
       await Notification.requestPermission();
@@ -93,6 +90,7 @@ function App() {
     try {
       const result = await GeminiService.generatePosterConcept();
       setConcept(result);
+      setImagePrompt(GeminiService.buildImagePrompt(result));
       setAppState(AppState.REVIEW_CONCEPT);
     } catch (err: any) {
       console.error(err);
@@ -109,8 +107,8 @@ function App() {
     setErrorMsg(null);
 
     try {
-      // Pass the entire concept object so text can be rendered
-      const base64Image = await GeminiService.generatePosterImage(concept);
+      // Pass the entire concept object and custom prompt so text can be rendered
+      const base64Image = await GeminiService.generatePosterImage(concept, imagePrompt);
       setImageUrl(base64Image);
       
       // --- SAVE TO LOCALSTORAGE HISTORY ---
@@ -190,59 +188,42 @@ function App() {
     setConcept(null);
     setImageUrl(null);
     setErrorMsg(null);
+    setImagePrompt('');
   };
-
-  // If API Key is missing (and we are in the environment that supports selection), show selection screen
-  if (!hasApiKey && typeof window !== 'undefined' && window.aistudio) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-onyx-900 text-gold-100 font-serif p-4 bg-classic-vignette">
-        <div className="text-center max-w-md border border-gold-800 p-8 bg-onyx-800/50 backdrop-blur-sm rounded-lg shadow-2xl relative overflow-hidden">
-          {/* Decorative corner accents */}
-          <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-gold-600/30 -translate-x-2 -translate-y-2"></div>
-          <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-gold-600/30 translate-x-2 -translate-y-2"></div>
-          <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-gold-600/30 -translate-x-2 translate-y-2"></div>
-          <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-gold-600/30 translate-x-2 translate-y-2"></div>
-
-          <div className="w-20 h-20 mx-auto mb-6 border border-gold-600/50 rounded-full flex items-center justify-center bg-gold-900/30 shadow-[0_0_15px_rgba(212,165,35,0.2)]">
-            <svg className="w-10 h-10 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
-          </div>
-          
-          <h1 className="text-3xl mb-2 font-serif text-gold-200 tracking-wide">Access Required</h1>
-          <div className="w-12 h-0.5 bg-gold-600 mx-auto mb-4"></div>
-          
-          <p className="mb-8 text-slate-300 text-sm leading-relaxed font-sans font-light">
-            To generate professional gold prospecting infographics with our advanced AI models, please connect your Google Cloud Project.
-          </p>
-          
-          <Button onClick={handleSelectKey} className="w-full justify-center mb-6 py-3 text-sm">
-            Connect Project
-          </Button>
-          
-          <p className="text-xs text-slate-500 border-t border-gold-900/50 pt-4 font-sans">
-            This uses a paid API key from your Google Cloud account. <br/>
-            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-gold-500 hover:text-gold-300 underline transition-colors mt-1 inline-block">
-              Learn more about billing
-            </a>
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8 relative min-h-screen">
       
-      {/* PWA Install Button (Floating Top Right) */}
-      {showInstallBtn && (
+      {/* Top Floating Action Bar */}
+      <div className="fixed top-4 right-4 z-40 flex items-center gap-2 sm:gap-3">
+        {/* API Key Status / Configuration Button */}
         <button
-          onClick={handleInstallClick}
-          className="fixed top-4 right-4 z-50 bg-gold-600 text-onyx-900 text-xs font-bold px-4 py-2 border border-gold-400 uppercase tracking-widest shadow-lg animate-pulse hover:animate-none"
+          onClick={() => setIsKeyModalOpen(true)}
+          className={`flex items-center gap-2 px-3 py-2 border text-xs font-sans font-medium uppercase tracking-wider transition-all backdrop-blur-md shadow-lg ${
+            hasApiKey
+              ? 'border-gold-700/80 bg-onyx-900/90 text-gold-300 hover:border-gold-400 hover:text-gold-100 hover:bg-gold-950/40'
+              : 'border-amber-500 bg-amber-950/85 text-amber-200 hover:bg-amber-900 shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse hover:animate-none'
+          }`}
+          title="Pengaturan Gemini API Key"
         >
-          Install App
+          <svg className="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          <span className="hidden sm:inline">{hasApiKey ? 'API Key: Terpasang' : 'Input API Key'}</span>
+          <span className="sm:hidden">{hasApiKey ? 'API Key' : 'Input Key'}</span>
+          <span className={`w-2 h-2 rounded-full ${hasApiKey ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]' : 'bg-amber-400'}`}></span>
         </button>
-      )}
+
+        {/* PWA Install Button */}
+        {showInstallBtn && (
+          <button
+            onClick={handleInstallClick}
+            className="bg-gold-600 text-onyx-900 text-xs font-bold px-3 py-2 border border-gold-400 uppercase tracking-widest shadow-lg hover:bg-gold-500 transition-colors"
+          >
+            Install App
+          </button>
+        )}
+      </div>
 
       {/* Header - Classic Style */}
       <div className="text-center max-w-2xl mx-auto mb-12 relative">
@@ -262,13 +243,21 @@ function App() {
         {errorMsg && (
           <div className="mb-6 p-6 bg-red-950/40 border border-red-900 text-red-200 text-center font-serif">
             <div className="font-bold mb-2 uppercase tracking-widest text-red-500">System Error</div>
-            {errorMsg}
-            <button 
-              onClick={() => setAppState(AppState.IDLE)} 
-              className="block mx-auto mt-4 text-xs uppercase tracking-widest text-gold-500 hover:text-white border-b border-gold-500 pb-1"
-            >
-              Return Home
-            </button>
+            <p className="mb-4">{errorMsg}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button 
+                onClick={() => setIsKeyModalOpen(true)}
+                className="text-xs uppercase tracking-widest text-gold-300 hover:text-white border border-gold-600/70 bg-gold-950/50 px-4 py-2 transition-colors font-sans"
+              >
+                Atur API Key
+              </button>
+              <button 
+                onClick={() => setAppState(AppState.IDLE)} 
+                className="text-xs uppercase tracking-widest text-slate-400 hover:text-white border-b border-slate-600 pb-1 font-sans"
+              >
+                Return Home
+              </button>
+            </div>
           </div>
         )}
 
@@ -288,6 +277,17 @@ function App() {
                 <Button onClick={handleGenerateConcept} className="mx-auto">
                   Begin Draft
                 </Button>
+                {!hasApiKey && (
+                  <div className="mt-6 pt-4 border-t border-gold-950 flex items-center justify-center gap-2 text-xs font-sans text-amber-300/90">
+                    <span>⚠️ API Key Gemini belum diatur.</span>
+                    <button 
+                      onClick={() => setIsKeyModalOpen(true)}
+                      className="text-gold-400 underline hover:text-gold-200 font-medium"
+                    >
+                      Klik di sini untuk mengatur API Key
+                    </button>
+                  </div>
+                )}
              </div>
           </div>
         )}
@@ -303,7 +303,11 @@ function App() {
         {/* State: Review Concept */}
         {(appState === AppState.REVIEW_CONCEPT || appState === AppState.GENERATING_IMAGE) && concept && (
           <div className="space-y-12 animate-fade-in-up">
-            <ConceptCard concept={concept} />
+            <ConceptCard 
+              concept={concept} 
+              imagePrompt={imagePrompt}
+              onPromptChange={setImagePrompt}
+            />
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Button 
@@ -389,6 +393,13 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* API Key Settings Modal */}
+      <ApiKeyModal
+        isOpen={isKeyModalOpen}
+        onClose={() => setIsKeyModalOpen(false)}
+        onKeySaved={refreshApiKeyStatus}
+      />
     </div>
   );
 }

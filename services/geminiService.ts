@@ -57,7 +57,72 @@ const themes = [
   "Fold Hinges: Structural Traps",
   "Saddle Reefs: Gold at the Top of the Fold",
   "Stockworks: Networks of Tiny Veins",
-  "Laterite Gold: Tropical Weathering"
+  "Laterite Gold: Tropical Weathering",
+
+  // --- US SPECIFIC & REGIONAL GEOLOGY EXPANSION (50 TOPICS) ---
+  // California Mother Lode & Sierra Nevada
+  "Tertiary Gravels: Hunting Ancient River Benches 50ft Up",
+  "Hydraulic Pit Rims: Prospecting the 1850s Placer Scars",
+  "The Mariposa Slate Belt: Ribbon Quartz & Pocket Gold",
+  "Spring Runoff Strategy: How Sierra Floods Reset Riverbeds",
+  "Feather & Yuba Rivers: Reading Heavy Cobble Bars",
+  "Serpentine Contact Dikes: The California Gold Trap",
+  "Glory Holes & Pocket Mining: Tracking Float to the Lode",
+  "Gold Bluffs: Ocean Wave Placers of Northern California",
+
+  // Southwest Desert & Metal Detecting
+  "Hunting the Caliche Layer: The Cemented False Bedrock",
+  "Dry Wash Blowouts: Where Wind & Gravity Trap Nuggets",
+  "Ironstone Dikes of Arizona: The Red Flag in the Desert",
+  "VLF vs. Pulse Induction: Taming Mineralized Red Soils",
+  "Detecting Deep Nugget Traps: Inside Mountain Arroyo Bends",
+  "The Bradshaw Mountains: Decomposed Granite & Rough Gold",
+  "Desert Pavement: Why Gold Sits on Flat Hardpan",
+  "Drywashing Efficiency: Air Flow vs. Recovery Rates",
+
+  // Rocky Mountains & High Altitude
+  "Colorado Glacial Outwash: Terminal Moraines vs. Kames",
+  "Clear Creek Flake Gold: High-Velocity Stream Panning",
+  "High Altitude Lodes: Prospecting Above Timberline (10,000+ ft)",
+  "Breccia Volcano Pipes: Cripple Creek's Unique Geology",
+  "Montana Gravel Bars: Alder Gulch Placer Science",
+  "Idaho Basin Paystreaks: Deep Valley Terrace Deposits",
+  "Pyrite vs. Tellurides: Identifying Rich Colorado Gold Ore",
+
+  // Alaska & The Klondike
+  "Nome Beach Sands: Tidal Wave Gold Recovery Tactics",
+  "Permafrost Paydirt: Thaw Zones & Ancient Channels",
+  "Glacial Flour vs. Heavy Pickers: Sorting Alaska Gold",
+  "Kenai Peninsula River Tactics: High Water Crevicing",
+  "Black Sand Overload: Managing Heavy Magnetite in Alaska",
+  "Fairbanks Gold Belts: Deep Muck Layer Strategies",
+  "Yukon Bench Mining: The White Channel Deposits",
+
+  // Southeast & Appalachian Gold Belt
+  "Dahlonega Gold Belt: America's First Real Gold Rush (1828)",
+  "Carolina Saprolite: Rotten Rock Gold in Red Clay",
+  "Reed Gold Mine: The 1799 Nugget Discovery Geology",
+  "Appalachian Greenstone: Hidden Veins in Old Mountains",
+  "Virginia Gold-Pyrite Belt: Tracking East Coast Veins",
+  "Red Clay Panning: Breaking Down Sticky Mud for Fine Gold",
+
+  // Old-Timer Clues & Historic Relics
+  "Hand-Stacked Rock Walls: Reading Chinese Miner Tailing Piles",
+  "Rocker Box & Long Tom Tailing Scatters",
+  "Stamp Mill Ruins: How to Sample Waste Tailings Safely",
+  "Drift Mine Portals: Finding Unworked Pillar Veins",
+  "Old Placer Ditches & Flumes: Tracing Forgotten Waterways",
+  "Arrastra Sites: Mexican Gold Grinding Stones Clues",
+  "Square Nails & Purple Glass: Dating Abandoned Claim Sites",
+  "The Boot Test: Identifying Old High-Grade Dumps",
+
+  // US Mining Claims & Public Land Navigation
+  "BLM vs. USFS Land: Where Recreational Panning is Legal",
+  "The Mining Law of 1872: Understanding Unpatented Claims",
+  "How to Read BLM MLRS Maps to Avoid Claim Jumping",
+  "Staking a 20-Acre Placer Claim: Corner Posts & Discovery Points",
+  "Casual Use vs. Plan of Operations: Equipment Regulations",
+  "GPAA Claims: How Club Membership Access Works"
 ];
 
 // Gaya visual diubah menjadi "Field Guide", "Geological Diagram", dan "Textured"
@@ -80,7 +145,12 @@ const layoutStructures = [
   "BEFORE & AFTER: A landscape split view showing a river channel 'Before Flood' (Normal) and 'After Flood' (New deposit zones marked).",
   "THE GEOLOGIST'S NOTEBOOK: A sketch-style layout with handwritten notes, arrows, and circled areas pointing to key geological features on a rock face.",
   "3D BLOCK DIAGRAM: An isometric view of a mountain or river section to show depth, layers, and how gold veins travel underground.",
-  "THE PROSPECTOR'S MAP: A top-down map view with 'X' marks, trails, and contour lines showing where to sample in a valley."
+  "THE PROSPECTOR'S MAP: A top-down map view with 'X' marks, trails, and contour lines showing where to sample in a valley.",
+  "BEGINNER VS. PRO (SIDE-BY-SIDE): Split-screen comparison showing 'Where Beginners Dig' (fast turbulent currents, barren sand bars) versus 'Where Pros Dig' (inside bend paystreaks, jagged bedrock riffles, concentrated black sand).",
+  "ANATOMY OF A PAYSTREAK (EXPLODED CALLOUTS): Detailed cutaway with callout lines pointing out hydraulic flow vectors, false bedrock clay seals, heavy gravel sorting, and high-density nugget traps.",
+  "EQUIPMENT SCHEMATIC (BLUEPRINT STYLE): Vintage technical schematic illustrating the physics of gold recovery equipment (Sluice Box, Highbanker, or Gold Pan) showing riffle turbulence, fluid dynamics, and where gold settles into miners moss.",
+  "STRATIGRAPHY COLUMN (VERTICAL PROFILE): A clear vertical profile column slicing through the ground layers: 1. Topsoil Overburden -> 2. Glacial Outwash Gravels -> 3. Ancient Tertiary Gold Channel -> 4. Decomposed Rotten Bedrock -> 5. Hard Fractured Bedrock.",
+  "FIELD IDENTIFICATION FLOWCHART: A clean decision-tree infographic layout with arrows and test checkmarks guiding prospectors through real field tests (e.g. Malleability/Crush test, Acid test, Streak test, and Specific Gravity)."
 ];
 
 /**
@@ -100,13 +170,39 @@ const getPreviousTopics = (): string => {
   }
 };
 
+export const getApiKey = (): string => {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('gemini_api_key');
+    if (local && local.trim()) {
+      return local.trim();
+    }
+  }
+  return (process.env.API_KEY || process.env.GEMINI_API_KEY || "").trim();
+};
+
+export const setStoredApiKey = (key: string): void => {
+  if (typeof window !== 'undefined') {
+    if (key && key.trim()) {
+      localStorage.setItem('gemini_api_key', key.trim());
+    } else {
+      localStorage.removeItem('gemini_api_key');
+    }
+  }
+};
+
+export const removeStoredApiKey = (): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('gemini_api_key');
+  }
+};
+
 /**
  * Generates a creative concept for a Gold Prospecting/Geology poster.
  */
 export const generatePosterConcept = async (): Promise<PosterConcept> => {
-  const apiKey = process.env.API_KEY || "";
+  const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error("System Error: API Key is missing from environment variables.");
+    throw new Error("API Key belum diatur. Silakan klik tombol 'API Key' di pojok kanan atas untuk memasukkan API Key Gemini Anda.");
   }
   const ai = new GoogleGenAI({ apiKey: apiKey });
 
@@ -202,37 +298,42 @@ export const generatePosterConcept = async (): Promise<PosterConcept> => {
 };
 
 /**
+ * Builds the exact prompt that is passed into the Gemini image generation model.
+ */
+export const buildImagePrompt = (concept: PosterConcept): string => {
+  return `Create a VERTICAL EDUCATIONAL INFOGRAPHIC POSTER about GOLD PROSPECTING.
+
+TEXT CONTENT TO INCLUDE (Must be legible):
+HEADLINE: "${concept.title}"
+SUBTITLE: "${concept.tagline}"
+LIST HEADER: "${concept.infographicTitle}"
+LIST POINTS:
+${concept.infographicPoints.map((p) => `- ${p}`).join('\n')}
+
+VISUAL STYLE & COMPOSITION:
+${concept.visualPrompt}
+
+MANDATORY ART DIRECTION:
+- STYLE: Realistic Illustration / Field Guide / National Geographic Diagram.
+- TEXTURE: Detailed Rock textures, flowing water, dirt, rust, metallic gold.
+- ATMOSPHERE: Educational, scientific, rugged, outdoors.
+- LAYOUT: Use distinct sections, arrows, or split screens to organize information.
+- NO ABSTRACT ART. NO CARTOONS. It must look like a professional reference guide.
+- Color Grading: Earth tones, Slate Grey, River Blue, Rusty Orange, Bright Gold.`.trim();
+};
+
+/**
  * Generates the actual poster image.
  */
-export const generatePosterImage = async (concept: PosterConcept): Promise<string> => {
-  const apiKey = process.env.API_KEY || "";
+export const generatePosterImage = async (concept: PosterConcept, customPrompt?: string): Promise<string> => {
+  const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error("System Error: API Key is missing.");
+    throw new Error("API Key belum diatur. Silakan klik tombol 'API Key' di pojok kanan atas untuk memasukkan API Key Gemini Anda.");
   }
   const ai = new GoogleGenAI({ apiKey: apiKey });
 
   try {
-    const prompt = `
-      Create a VERTICAL EDUCATIONAL INFOGRAPHIC POSTER about GOLD PROSPECTING.
-      
-      TEXT CONTENT TO INCLUDE (Must be legible):
-      HEADLINE: "${concept.title}"
-      SUBTITLE: "${concept.tagline}"
-      LIST HEADER: "${concept.infographicTitle}"
-      LIST POINTS:
-      ${concept.infographicPoints.map((p) => `- ${p}`).join('\n')}
-      
-      VISUAL STYLE & COMPOSITION:
-      ${concept.visualPrompt}
-      
-      MANDATORY ART DIRECTION:
-      - STYLE: Realistic Illustration / Field Guide / National Geographic Diagram.
-      - TEXTURE: Detailed Rock textures, flowing water, dirt, rust, metallic gold.
-      - ATMOSPHERE: Educational, scientific, rugged, outdoors.
-      - LAYOUT: Use distinct sections, arrows, or split screens to organize information.
-      - NO ABSTRACT ART. NO CARTOONS. It must look like a professional reference guide.
-      - Color Grading: Earth tones, Slate Grey, River Blue, Rusty Orange, Bright Gold.
-    `;
+    const prompt = customPrompt && customPrompt.trim() ? customPrompt.trim() : buildImagePrompt(concept);
 
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-image-preview", 

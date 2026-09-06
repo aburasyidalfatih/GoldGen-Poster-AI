@@ -1,11 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PosterConcept } from '../types';
+import { buildImagePrompt } from '../services/geminiService';
 
 interface ConceptCardProps {
   concept: PosterConcept;
+  imagePrompt?: string;
+  onPromptChange?: (prompt: string) => void;
 }
 
-const ConceptCard: React.FC<ConceptCardProps> = ({ concept }) => {
+const ConceptCard: React.FC<ConceptCardProps> = ({ 
+  concept, 
+  imagePrompt, 
+  onPromptChange 
+}) => {
+  const [activeTab, setActiveTab] = useState<'prompt' | 'json'>('prompt');
+  const [copiedType, setCopiedType] = useState<'prompt' | 'json' | 'social' | null>(null);
+
+  const defaultPrompt = buildImagePrompt(concept);
+  const currentPrompt = imagePrompt !== undefined ? imagePrompt : defaultPrompt;
+  const jsonString = JSON.stringify(concept, null, 2);
+
+  const handleCopy = (text: string, type: 'prompt' | 'json' | 'social') => {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
+  };
+
+  const handleResetPrompt = () => {
+    if (onPromptChange) {
+      onPromptChange(defaultPrompt);
+    }
+  };
+
   return (
     <div className="relative w-full max-w-4xl mx-auto">
       {/* BACKGROUND GLOW */}
@@ -60,13 +86,6 @@ const ConceptCard: React.FC<ConceptCardProps> = ({ concept }) => {
                   </li>
                 ))}
               </ul>
-
-              <div className="mt-8 p-6 bg-[#0a0a0a] border border-gold-900/30">
-                 <h4 className="text-gold-600 text-[10px] font-bold uppercase mb-2 tracking-widest font-sans">Visual Art Direction</h4>
-                 <p className="text-slate-400 text-sm font-serif italic leading-relaxed">
-                   "{concept.visualPrompt}"
-                 </p>
-              </div>
             </div>
 
             {/* RIGHT: Details & Social */}
@@ -88,17 +107,155 @@ const ConceptCard: React.FC<ConceptCardProps> = ({ concept }) => {
                </div>
 
                {/* Social Caption Frame */}
-               <div className="flex-1 bg-gold-900/10 border border-gold-800/30 p-5 flex flex-col">
-                  <h4 className="text-gold-600 text-[10px] uppercase tracking-widest mb-2 font-sans border-b border-gold-900/30 pb-2">
-                    Social Copy
-                  </h4>
-                  <p className="text-slate-300 text-xs font-mono leading-relaxed opacity-80 flex-1">
+               <div className="flex-1 bg-gold-900/10 border border-gold-800/30 p-5 flex flex-col relative">
+                  <div className="flex items-center justify-between border-b border-gold-900/30 pb-2 mb-2">
+                    <h4 className="text-gold-600 text-[10px] uppercase tracking-widest font-sans font-semibold">
+                      Social Copy
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(concept.socialCaption, 'social')}
+                      className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-gold-400 hover:text-white px-2 py-0.5 border border-gold-800/50 bg-gold-950/40 hover:border-gold-500 hover:bg-gold-900/40 transition-all cursor-pointer font-sans"
+                      title="Copy Social Copy"
+                    >
+                      {copiedType === 'social' ? (
+                        <>
+                          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-emerald-400 font-semibold">COPIED</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <span>COPY</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-slate-300 text-xs font-mono leading-relaxed opacity-80 flex-1 select-all">
                     {concept.socialCaption}
                   </p>
                </div>
             </div>
 
           </div>
+
+          {/* PROMPT & JSON TO IMAGE INSPECTOR */}
+          <div className="mt-8 border-t border-gold-900/60 pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-gold-500 animate-pulse"></span>
+                <h4 className="text-gold-400 font-serif text-xs uppercase tracking-[0.2em]">
+                  Image Generator Payload
+                </h4>
+              </div>
+
+              {/* Tab Switcher */}
+              <div className="inline-flex bg-onyx-900 border border-gold-900/80 p-0.5 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('prompt')}
+                  className={`px-3 py-1 text-[11px] font-sans tracking-wider uppercase transition-colors ${
+                    activeTab === 'prompt'
+                      ? 'bg-gold-600 text-onyx-900 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-gold-300'
+                  }`}
+                >
+                  Prompt to Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('json')}
+                  className={`px-3 py-1 text-[11px] font-sans tracking-wider uppercase transition-colors ${
+                    activeTab === 'json'
+                      ? 'bg-gold-600 text-onyx-900 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-gold-300'
+                  }`}
+                >
+                  Concept JSON
+                </button>
+              </div>
+            </div>
+
+            {/* TAB CONTENT: PROMPT TO IMAGE */}
+            {activeTab === 'prompt' && (
+              <div className="bg-[#070707] border border-gold-900/60 p-4 relative">
+                <div className="flex justify-between items-center mb-2 pb-2 border-b border-gold-900/40 text-[11px] font-sans">
+                  <span className="text-gold-500 font-mono flex items-center gap-1.5">
+                    <span>Model:</span>
+                    <span className="text-slate-300">gemini-3-pro-image-preview</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {onPromptChange && currentPrompt !== defaultPrompt && (
+                      <button
+                        type="button"
+                        onClick={handleResetPrompt}
+                        className="text-amber-400 hover:text-amber-200 text-[10px] uppercase tracking-wider underline transition-colors mr-2 font-mono"
+                      >
+                        Reset Prompt
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(currentPrompt, 'prompt')}
+                      className="text-[10px] uppercase tracking-widest text-gold-400 hover:text-white border border-gold-800/60 px-2.5 py-1 bg-gold-950/30 transition-colors"
+                    >
+                      {copiedType === 'prompt' ? '✓ COPIED' : 'COPY PROMPT'}
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-400 font-sans italic mb-2">
+                  Prompt lengkap yang dikirim ke generator gambar. Anda dapat mengedit teks ini jika ingin menyesuaikan hasil sebelum menekan "Render Final Plate":
+                </p>
+
+                {onPromptChange ? (
+                  <textarea
+                    value={currentPrompt}
+                    onChange={(e) => onPromptChange(e.target.value)}
+                    rows={8}
+                    className="w-full bg-[#030303] border border-gold-900/60 p-3 text-xs font-mono text-slate-200 leading-relaxed focus:outline-none focus:border-gold-500 transition-colors resize-y selection:bg-gold-700 selection:text-white"
+                    placeholder="Enter prompt for image generation..."
+                  />
+                ) : (
+                  <pre className="bg-[#030303] border border-gold-900/60 p-3 text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto selection:bg-gold-700 selection:text-white">
+                    {currentPrompt}
+                  </pre>
+                )}
+              </div>
+            )}
+
+            {/* TAB CONTENT: CONCEPT JSON */}
+            {activeTab === 'json' && (
+              <div className="bg-[#070707] border border-gold-900/60 p-4 relative">
+                <div className="flex justify-between items-center mb-2 pb-2 border-b border-gold-900/40 text-[11px] font-sans">
+                  <span className="text-gold-500 font-mono flex items-center gap-1.5">
+                    <span>Format:</span>
+                    <span className="text-slate-300">application/json</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(jsonString, 'json')}
+                    className="text-[10px] uppercase tracking-widest text-gold-400 hover:text-white border border-gold-800/60 px-2.5 py-1 bg-gold-950/30 transition-colors"
+                  >
+                    {copiedType === 'json' ? '✓ COPIED' : 'COPY JSON'}
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-slate-400 font-sans italic mb-2">
+                  Struktur data JSON konsep poster yang dihasilkan AI:
+                </p>
+
+                <pre className="bg-[#030303] border border-gold-900/60 p-3 text-xs font-mono text-amber-300/90 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto selection:bg-gold-700 selection:text-white">
+                  {jsonString}
+                </pre>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>
