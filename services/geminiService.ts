@@ -131,7 +131,12 @@ const visualStyles = [
   "National Geographic Cross-Section: Clean, highly realistic 3D cutaway of riverbeds or mountains, educational labels, bright daylight lighting.",
   "Dark Rock Macro: Dark slate/granite background, extreme close-up of gold veins, high contrast white/yellow text, gritty texture.",
   "Survivor Manual: Rough wood or dirt background, rugged aesthetic, tools like pickaxes and pans arranged as borders, bold grunge typography.",
-  "Detailed Diagrammatic: Split screens showing 'Good Rock' vs 'Bad Rock', clear checkmarks and cross icons, hyper-realistic mineral rendering."
+  "Detailed Diagrammatic: Split screens showing 'Good Rock' vs 'Bad Rock', clear checkmarks and cross icons, hyper-realistic mineral rendering.",
+  "USGS Topographic Survey: Mid-century government geological survey aesthetic, fine topographic elevation contour lines, sepia and sage green terrain tints, technical grid markings, vintage official survey stamp details.",
+  "19th-Century Mining Blueprint: Deep Prussian blue/cyanotype background, crisp white and cyan architectural drafting linework, technical equipment cross-sections, engineering measurement callouts, vintage draftsman typography.",
+  "1849 Gold Rush Gazette: Authentic 1850s Wild West newspaper broadside style, detailed woodcut engravings, weathered antique newsprint texture, ornamental wood-type headlines, frontier mining camp aesthetic.",
+  "Expedition Field Journal: Open leather-bound traveler's naturalist notebook, tea-stained deckle-edge paper, colored pencil and watercolor mineral sketches, handwritten cursive geological field observations with pinned specimen labels.",
+  "Cinematic Studio Macro Photography: Ultra-high-resolution 4K studio macro photography, dramatic low-key rim lighting against dark obsidian slate, hyper-detailed glistening native gold crystal facets, wet riverbed texture, shallow depth of field."
 ];
 
 // Struktur layout khusus edukasi/instruksi
