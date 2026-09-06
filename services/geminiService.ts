@@ -206,24 +206,43 @@ export const generatePosterConcept = async (): Promise<PosterConcept> => {
   }
   const ai = new GoogleGenAI({ apiKey: apiKey });
 
-  // --- SEQUENTIAL TOPIC ROTATION LOGIC ---
-  // Get the last used index from localStorage (default to -1 so first run is 0)
-  let nextIndex = 0;
+  // --- SEQUENTIAL ROTATION LOGIC (TOPIC, LAYOUT, & STYLE) ---
+  let nextTopicIndex = 0;
+  let nextLayoutIndex = 0;
+  let nextStyleIndex = 0;
+
   if (typeof window !== 'undefined') {
-    const storedIndex = localStorage.getItem('goldgen_topic_index');
-    if (storedIndex !== null) {
-      nextIndex = (parseInt(storedIndex, 10) + 1) % themes.length;
+    // 1. Topic Rotation (Cycles 1 to 100)
+    const storedTopic = localStorage.getItem('goldgen_topic_index');
+    if (storedTopic !== null) {
+      nextTopicIndex = (parseInt(storedTopic, 10) + 1) % themes.length;
     }
-    // Save the new index for next time
-    localStorage.setItem('goldgen_topic_index', nextIndex.toString());
+    localStorage.setItem('goldgen_topic_index', nextTopicIndex.toString());
+
+    // 2. Layout Structure Rotation (Cycles through all 15 layouts)
+    const storedLayout = localStorage.getItem('goldgen_layout_index');
+    if (storedLayout !== null) {
+      nextLayoutIndex = (parseInt(storedLayout, 10) + 1) % layoutStructures.length;
+    } else {
+      nextLayoutIndex = Math.floor(Math.random() * layoutStructures.length);
+    }
+    localStorage.setItem('goldgen_layout_index', nextLayoutIndex.toString());
+
+    // 3. Visual Style Rotation (Cycles through all 5 visual styles)
+    const storedStyle = localStorage.getItem('goldgen_style_index');
+    if (storedStyle !== null) {
+      nextStyleIndex = (parseInt(storedStyle, 10) + 1) % visualStyles.length;
+    } else {
+      nextStyleIndex = Math.floor(Math.random() * visualStyles.length);
+    }
+    localStorage.setItem('goldgen_style_index', nextStyleIndex.toString());
   }
 
-  const randomTheme = themes[nextIndex];
-  // ---------------------------------------
+  const selectedTheme = themes[nextTopicIndex];
+  const selectedStyle = visualStyles[nextStyleIndex];
+  const selectedLayout = layoutStructures[nextLayoutIndex];
+  // -------------------------------------------------------------
 
-  const randomStyle = visualStyles[Math.floor(Math.random() * visualStyles.length)];
-  const randomLayout = layoutStructures[Math.floor(Math.random() * layoutStructures.length)];
-  
   // Get history to prevent duplicates (still useful for context, though rotation solves the main issue)
   const previouslyGenerated = getPreviousTopics();
 
@@ -233,9 +252,9 @@ export const generatePosterConcept = async (): Promise<PosterConcept> => {
       contents: `Create a concept for a REALISTIC GEOLOGICAL PROSPECTING INFOGRAPHIC.
       
       PARAMETERS:
-      - Core Topic Suggestions: "${randomTheme}" (You can vary this)
-      - Visual Style: "${randomStyle}"
-      - Layout Structure: "${randomLayout}"
+      - Core Topic Suggestions: "${selectedTheme}" (You can vary this)
+      - Visual Style: "${selectedStyle}"
+      - Layout Structure: "${selectedLayout}"
       
       HISTORY EXCLUSION LIST (DO NOT REPEAT THESE EXACT TITLES):
       [${previouslyGenerated}]
